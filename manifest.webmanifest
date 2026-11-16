@@ -1,0 +1,17 @@
+{
+  "name": "Patrimoine NIN NIN",
+  "short_name": "Patrimoine NIN NIN",
+  "description": "Gestion des biens de la famille : loyers, reçus, dépenses, démarches.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f4f1",
+  "theme_color": "#1f5c4a",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
