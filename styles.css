@@ -118,3 +118,10 @@ input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px soli
   .toast{bottom:28px}
   .hero{padding:28px}
 }
+[data-install]{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+[data-install] svg{width:18px;height:18px}
+.chip[data-install] svg{width:15px;height:15px}
+@media (min-width:900px){
+  body:has(#tabs[hidden]) .app{margin:0 auto;max-width:480px;padding:40px 24px}
+}
+.tabs[hidden]{display:none!important}
