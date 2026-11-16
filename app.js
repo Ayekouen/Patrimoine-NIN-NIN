@@ -42,6 +42,7 @@ const IC = {
   messages: '<path d="M4 5h16v11H8l-4 4z"/>',
   finances: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0"/>',
+  telecharger: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
   reglages: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
 };
 const svg = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
@@ -179,7 +180,8 @@ function ecranConnexion(erreur) {
         <div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(k => k === '' ? '<span></span>' : `<button type="button" data-k="${k}" aria-label="${k === '⌫' ? 'Effacer' : k}">${k}</button>`).join('')}</div></div>
         <p class="err" id="lgerr" ${err ? '' : 'hidden'}>${esc(err || '')}</p>
       </div>
-      <p class="small muted" style="text-align:center">PIN oublié ? Demandez au gestionnaire de le réinitialiser.</p></div>`;
+      <p class="small muted" style="text-align:center;margin:0">Pas encore de compte ? Demandez au gestionnaire de la famille de vous créer un accès avec votre numéro de téléphone.<br>PIN oublié ? Le gestionnaire peut le réinitialiser.</p>
+      ${btnInstall()}</div>`;
     $('#lgtel').oninput = e => { tel = e.target.value; };
     $$('.pad button').forEach(b => b.onclick = async () => {
       const k = b.dataset.k;
@@ -197,6 +199,24 @@ function ecranConnexion(erreur) {
   const majPin = () => $$('.pin i').forEach((x, i) => x.classList.toggle('on', i < pinBuf.length));
   dessiner(erreur);
 }
+/* ---------- Installation (application téléchargeable) ---------- */
+let invitInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); invitInstall = e; document.querySelectorAll('[data-install]').forEach(b => b.hidden = false); });
+window.addEventListener('appinstalled', () => { invitInstall = null; document.querySelectorAll('[data-install]').forEach(b => b.hidden = true); toast('Application installée'); });
+const estInstallee = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const btnInstall = (cls = 'btn ghost', txt = 'Installer l\'application') => estInstallee() ? '' : `<button type="button" class="${cls}" data-install>${svg('telecharger')}<span>${txt}</span></button>`;
+async function installer() {
+  if (invitInstall) { invitInstall.prompt(); const r = await invitInstall.userChoice; if (r.outcome === 'accepted') invitInstall = null; return; }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), android = /android/i.test(navigator.userAgent);
+  const etapes = ios ? ['Ouvrez cette page dans <b>Safari</b>.', 'Touchez le bouton <b>Partager</b> (carré avec une flèche vers le haut).', 'Choisissez <b>Sur l\'écran d\'accueil</b>, puis <b>Ajouter</b>.']
+    : android ? ['Ouvrez cette page dans <b>Chrome</b>.', 'Touchez le menu <b>⋮</b> en haut à droite.', 'Choisissez <b>Installer l\'application</b> ou <b>Ajouter à l\'écran d\'accueil</b>.']
+    : ['Ouvrez cette page dans <b>Chrome</b> ou <b>Edge</b>.', 'Cliquez sur l\'icône d\'installation à droite de la barre d\'adresse (écran avec une flèche), ou menu <b>⋮</b> → <b>Installer Patrimoine NIN NIN</b>.', 'L\'application s\'ouvre alors dans sa propre fenêtre, avec une icône sur le bureau.'];
+  const corps = `${entete('Installer l\'application')}<p class="muted" style="margin:0">L'application s'installe comme une application classique, sans passer par un magasin d'applications.</p>
+    <ol class="stack" style="padding-left:20px;margin:0">${etapes.map(t => `<li>${t}</li>`).join('')}</ol><button class="btn" data-close>J'ai compris</button>`;
+  if (typeof sheet === 'function' && document.getElementById('layer')) sheet(`<div class="stack">${corps}</div>`);
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-install]')) installer(); });
+
 function ecranInitialisation() {
   $('#tabs').hidden = true;
   $('#app').innerHTML = `<form class="stack" id="init" style="padding-top:18px">
@@ -253,7 +273,7 @@ async function vVerifier() {
 function topbar(titre, sous) {
   const n = nonLues();
   return `<div class="top"><div style="min-width:0"><div class="eyebrow">${esc(sous)}</div><h1>${esc(titre)}</h1></div>
-  <div class="row" style="gap:8px">${estG() ? `<button class="iconbtn" id="reglages" aria-label="Réglages">${svg('reglages')}</button>` : ''}
+  <div class="row" style="gap:8px">${btnInstall('chip', 'Installer')}${estG() ? `<button class="iconbtn" id="reglages" aria-label="Réglages">${svg('reglages')}</button>` : ''}
   <button class="iconbtn" id="bell" aria-label="Notifications">${svg('bell')}${n ? `<b>${n}</b>` : ''}</button></div></div>`;
 }
 function vAccueil() {
